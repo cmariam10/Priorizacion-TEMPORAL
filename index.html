@@ -50,7 +50,7 @@ button{border:0;background:var(--blue);color:white;border-radius:9px;padding:9px
      <input id='manualLayer' placeholder='Nombre de capa, ej. areas_silvestres_protegidas' style='width:100%;margin-top:6px'>
      <button id='addManualLayer' class='secondary' style='margin-top:6px;width:100%'>Agregar capa</button>
    </div>
-   <p class='note'>Versión corregida: las capas se piden en WGS84/EPSG:4326 porque SNIT publica sus geoservicios en CRTM05 y WGS84, no necesariamente en Web Mercator. Si una capa no carga, el visor mostrará alerta de error de teselas.</p>
+   <p class='note'>Versión GitHub: capas SNIT con URL HTTPS y nombre completo con namespace. Si una no carga, abre el GetCapabilities del nodo y copia el nombre exacto de Layer/Name en la carga manual.</p>
    <div id='layerStatus' class='note'></div>
  </div>
 </aside>
@@ -73,16 +73,16 @@ const scenarios={
 };
 const labels={nd:'Necesidad y desempeño',is:'Impacto socioeconómico',vi:'Viabilidad',rr:'Riesgo / resiliencia',si:'Sostenibilidad',ger:'Gerencial'};
 const snitLayers=[
- {name:'Áreas silvestres protegidas / SINAC',url:'https://geos.snitcr.go.cr/be/SINAC/wms',layers:'areas_silvestres_protegidas',opacity:.55, source:'SNIT-SINAC'},
- {name:'Áreas de conservación / SINAC',url:'https://geos.snitcr.go.cr/be/SINAC/wms',layers:'areas_conservacion',opacity:.45, source:'SNIT-SINAC'},
- {name:'Corredores biológicos / SINAC',url:'https://geos.snitcr.go.cr/be/SINAC/wms',layers:'corredores_biologicos',opacity:.55, source:'SNIT-SINAC'},
- {name:'Corredores biológicos / SINAC alt.',url:'https://geos.snitcr.go.cr/be/SINAC/wms',layers:'corredoresbiologicos',opacity:.55, source:'SNIT-SINAC'},
- {name:'Humedales / SINAC',url:'https://geos.snitcr.go.cr/be/SINAC/wms',layers:'humedales',opacity:.55, source:'SNIT-SINAC'},
- {name:'Red vial nacional / CONAVI',url:'https://geos.snitcr.go.cr/be/CONAVI/wms',layers:'rutas_nacionales',opacity:.75, source:'SNIT-CONAVI'},
- {name:'Intervenciones conservación vial 2025 / CONAVI',url:'https://geos.snitcr.go.cr/be/CONAVI/wms',layers:'Intervenciones_de_Conservación_Vial_Agosto_2025',opacity:.75, source:'SNIT-CONAVI'},
- {name:'Distritos / IGN',url:'https://geos.snitcr.go.cr/be/IGN_5/wms',layers:'distritos',opacity:.35, source:'SNIT-IGN'},
- {name:'Límite nacional / IGN',url:'https://geos.snitcr.go.cr/be/IGN_5/wms',layers:'limite_nacional',opacity:.55, source:'SNIT-IGN'},
- {name:'Recarga acuífera / SENARA',url:'https://geos.snitcr.go.cr/be/SENARA/wms',layers:'recarga_acuifera',opacity:.55, source:'SNIT-SENARA'}
+ // CAPAS SNIT: usar URL WMS oficial + nombre COMPLETO con namespace. En GitHub Pages deben ir en HTTPS.
+ {name:'IGN límite cantonal 5k CO',url:'https://geos.snitcr.go.cr/be/IGN_5_CO/wms?',layers:'IGN_5_CO:limitecantonal_5k',opacity:.45, source:'SNIT-IGN'},
+ {name:'IGN límite distrital 5k',url:'https://geos.snitcr.go.cr/be/IGN_5/wms?',layers:'IGN_5:limitedistrital_5k',opacity:.35, source:'SNIT-IGN'},
+ {name:'IGN límite nacional 5k',url:'https://geos.snitcr.go.cr/be/IGN_5/wms?',layers:'IGN_5:limitenacional_5k',opacity:.55, source:'SNIT-IGN'},
+ {name:'SINAC corredores biológicos',url:'https://geos.snitcr.go.cr/be/SINAC/wms?',layers:'SINAC:corredoresbiologicos',opacity:.55, source:'SNIT-SINAC'},
+ {name:'SINAC áreas silvestres protegidas',url:'https://geos.snitcr.go.cr/be/SINAC/wms?',layers:'SINAC:areas_silvestres_protegidas',opacity:.55, source:'SNIT-SINAC'},
+ {name:'SINAC humedales',url:'https://geos.snitcr.go.cr/be/SINAC/wms?',layers:'SINAC:humedales',opacity:.55, source:'SNIT-SINAC'},
+ {name:'CONAVI zonas conservación vial',url:'https://geos.snitcr.go.cr/be/CONAVI/wms?',layers:'CapasCONAVI:Zonas_de_Conservación_Vial',opacity:.65, source:'SNIT-CONAVI'},
+ {name:'SENARA recarga acuífera',url:'https://geos.snitcr.go.cr/be/SENARA/wms?',layers:'SENARA:recarga_acuifera',opacity:.55, source:'SNIT-SENARA'},
+ {name:'CENIGA ambiental histórico',url:'https://geodatos.sinia.go.cr/geoserver/CENIGA/wms?',layers:'CENIGA:corredores_biologicos',opacity:.55, source:'SINIA-CENIGA'}
 ];
 let weights={...scenarios['Base metodología']};
 let map=L.map('map').setView([9.93,-84.08],8);

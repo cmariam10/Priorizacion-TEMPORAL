@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang='es'>
 <head>
@@ -144,28 +145,58 @@ function renderLayers(){
  };
 }
 function statusMsg(msg){let el=document.getElementById('layerStatus'); if(el) el.innerHTML=msg;}
-function makeWmsLayer(c){
-  return L.tileLayer.wms(c.url,{
-    layers:c.layers,
-    format:'image/png',
-    transparent:true,
-    version:'1.1.1',
-    crs:L.CRS.EPSG4326,
-    uppercase:true,
-    opacity:c.opacity||.6,
-    attribution:'SNIT Costa Rica'
-  });
+// SNIT suele fallar con WMS por teselas/CRS en Leaflet. Este modo usa imagen única GetMap en EPSG:4326.
+function normalizeWmsUrl(u){
+  u=(u||'').trim();
+  if(!u) return u;
+  return u.includes('?') ? u : u + '?';
+}
+function buildWmsImageUrl(c){
+  const b=map.getBounds();
+  const size=map.getSize();
+  const base=normalizeWmsUrl(c.url);
+  const params={
+    SERVICE:'WMS', VERSION:'1.1.1', REQUEST:'GetMap',
+    LAYERS:c.layers, STYLES:'', FORMAT:'image/png', TRANSPARENT:'TRUE',
+    SRS:'EPSG:4326',
+    BBOX:[b.getWest(), b.getSouth(), b.getEast(), b.getNorth()].join(','),
+    WIDTH:Math.max(256, Math.round(size.x)), HEIGHT:Math.max(256, Math.round(size.y))
+  };
+  const qs=Object.entries(params).map(([k,v])=>k+'='+encodeURIComponent(v)).join('&');
+  return base + (base.endsWith('?')?'':'&') + qs;
+}
+function refreshSingleWms(i){
+  const obj=wmsGroup[i]; if(!obj) return;
+  const c=obj.cfg;
+  const url=buildWmsImageUrl(c);
+  const bounds=map.getBounds();
+  const img=new Image();
+  img.onload=()=>{
+    const next=L.imageOverlay(url,bounds,{opacity:c.opacity||.6,interactive:false,attribution:'SNIT Costa Rica'});
+    next.addTo(map);
+    if(obj.layer) map.removeLayer(obj.layer);
+    obj.layer=next;
+    obj.testUrl=url;
+    statusMsg('✅ Capa cargada como imagen WMS: <b>'+c.name+'</b>');
+  };
+  img.onerror=()=>{
+    obj.testUrl=url;
+    statusMsg('⚠️ SNIT no devolvió imagen para <b>'+c.name+'</b>. En la consola del navegador queda el enlace WMS de prueba.');
+    console.warn('WMS falló:', url);
+  };
+  img.src=url;
 }
 function toggleWms(i,on){
  let c=snitLayers[i];
  if(on){
-   let lyr=makeWmsLayer(c);
-   let errors=0;
-   lyr.on('tileerror',()=>{errors++; statusMsg('⚠️ La capa <b>'+c.name+'</b> no respondió. Prueba el nombre alterno o pégala manualmente desde el GetCapabilities del SNIT.');});
-   lyr.on('load',()=>{if(errors===0) statusMsg('✅ Capa cargada: <b>'+c.name+'</b>');});
-   lyr.addTo(map); wmsGroup[i]=lyr;
- } else if(wmsGroup[i]){map.removeLayer(wmsGroup[i]); delete wmsGroup[i]; statusMsg('Capa desactivada.');}
+   wmsGroup[i]={cfg:c,layer:null,testUrl:null};
+   refreshSingleWms(i);
+ } else if(wmsGroup[i]){
+   if(wmsGroup[i].layer) map.removeLayer(wmsGroup[i].layer);
+   delete wmsGroup[i]; statusMsg('Capa desactivada.');
+ }
 }
+map.on('moveend zoomend resize',()=>{Object.keys(wmsGroup).forEach(i=>refreshSingleWms(i));});
 function normalize(){let tot=Object.values(weights).reduce((a,b)=>a+(+b||0),0)||1; Object.keys(weights).forEach(k=>weights[k]=+(weights[k]*100/tot).toFixed(1));}
 function filtered(){let q=document.getElementById('q').value.toLowerCase(), et=document.getElementById('fEtapa').value, inst=document.getElementById('fInst').value, cl=document.getElementById('fClass').value; return projects.features.map(f=>{f.properties._score=score(f.properties); f.properties._class=cls(f.properties._score); return f}).filter(f=>{let p=f.properties; let txt=Object.values(p).join(' ').toLowerCase(); return (!q||txt.includes(q))&&(!et||p.etapa===et)&&(!inst||p.institucion===inst)&&(!cl||p._class===cl)}).sort((a,b)=>b.properties._score-a.properties._score)}
 function update(){let feats=filtered(); markerLayer.clearLayers().addData(feats); document.getElementById('kTotal').textContent=feats.length; document.getElementById('kAvg').textContent=feats.length?(feats.reduce((a,f)=>a+f.properties._score,0)/feats.length).toFixed(1):0; document.getElementById('kHigh').textContent=feats.filter(f=>f.properties._score>=70).length; document.getElementById('kElig').textContent=feats.filter(f=>f.properties.elegible).length; renderRanking(feats); if(selectedProjectId){let f=projects.features.find(x=>String(x.properties.id)===String(selectedProjectId)); if(f) showProjectDetail(f.properties);}}

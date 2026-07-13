@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 
 <html lang="es">
@@ -10,7 +12,24 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>if(!window.L){document.write("<script src='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js'><\/script>")}</script>
 
-<link href="css/priorizacion.css" rel="stylesheet"/></head>
+<link href="css/priorizacion.css" rel="stylesheet"/>
+<style id="matriz-viabilidad-fix">
+/* Matriz centrada y sin espacio blanco innecesario */
+.decision-top{display:block!important;height:auto!important;min-height:0!important;padding:0!important;margin:0 auto 18px!important;background:transparent!important;border:0!important;overflow:visible!important}
+.decision-top>.decision-card:first-child{width:min(1320px,100%)!important;margin:0 auto!important;padding:18px 20px 14px!important}
+.decision-top>.quad-side{display:none!important}
+.quad-wrap{height:560px!important;max-width:1240px!important;margin:8px auto 0!important;grid-template-columns:58px minmax(0,1fr)!important;grid-template-rows:minmax(0,1fr) 42px!important}
+.quad{overflow:visible!important}
+.quad .qzone{overflow:hidden}
+.qpoint{width:15px!important;height:15px!important;z-index:6!important}
+.qpoint:hover,.qpoint.active{width:20px!important;height:20px!important}
+.qpoint-label{position:absolute;transform:translate(10px,-50%);font-size:10px;font-weight:800;color:#0b2f5b;background:rgba(255,255,255,.9);border:1px solid #dbe4f0;border-radius:7px;padding:3px 5px;white-space:nowrap;pointer-events:none;z-index:7;box-shadow:0 2px 7px rgba(11,47,91,.10)}
+.axis-scale-x,.axis-scale-y{position:absolute;inset:0;pointer-events:none;z-index:3;font-size:10px;color:#65758b;font-weight:700}
+.axis-scale-x span{position:absolute;bottom:-24px;transform:translateX(-50%)}
+.axis-scale-y span{position:absolute;left:-31px;transform:translateY(50%)}
+@media(max-width:900px){.quad-wrap{height:460px!important}.qpoint-label{display:none}}
+</style>
+</head>
 <body>
 <div class="workspace">
 <header class="module-head">
@@ -32,19 +51,19 @@
 <section class="decision-top">
 <div class="decision-card">
 <div class="decision-title">
-<div><h2>Matriz estratégica del portafolio</h2><p>Eje Y: puntaje de priorización del escenario activo. Eje X: complejidad de implementación calculada con etapa, viabilidad, madurez, brechas de información y restricciones.</p></div>
+<div><h2>Matriz estratégica del portafolio</h2><p>Eje Y: puntaje de priorización del escenario activo. Eje X: viabilidad de implementación del proyecto (0–100).</p></div>
 <span class="badge" style="background:#0b2f5b">Cada punto es un proyecto</span>
 </div>
 <div class="quad-wrap">
 <div class="axis-y">Puntaje de priorización</div>
 <div class="quad" id="quadChart">
-<div class="qzone q1"><b>Oportunidades Estratégicas</b><span>Alto valor y menor complejidad relativa</span></div>
-<div class="qzone q2"><b>Proyectos Transformadores</b><span>Alto valor y alta complejidad de implementación</span></div>
-<div class="qzone q3"><b>Intervenciones Complementarias</b><span>Aporte específico y menor complejidad relativa</span></div>
-<div class="qzone q4"><b>Proyectos de Largo Plazo</b><span>Mayor complejidad y valor estratégico todavía limitado</span></div>
-<div class="quad-hint">Cortes: prioridad 70 · complejidad 50</div>
+<div class="qzone q1"><b>Proyectos Transformadores</b><span>Alta prioridad y viabilidad todavía limitada</span></div>
+<div class="qzone q2"><b>Oportunidades Estratégicas</b><span>Alta prioridad y alta viabilidad de implementación</span></div>
+<div class="qzone q3"><b>Proyectos de Largo Plazo</b><span>Menor prioridad y baja viabilidad actual</span></div>
+<div class="qzone q4"><b>Intervenciones Complementarias</b><span>Menor prioridad y viabilidad favorable</span></div>
+<div class="quad-hint">Cortes: prioridad 70 · viabilidad 50</div>
 </div>
-<div></div><div><div class="axis-x">Complejidad de implementación</div><div class="axis-note">Menor complejidad ← 0–100 → Mayor complejidad</div></div>
+<div></div><div><div class="axis-x">Viabilidad de implementación</div><div class="axis-note">Menor viabilidad ← 0–100 → Mayor viabilidad</div></div>
 </div>
 </div>
 <div class="decision-card quad-side">
@@ -87,5 +106,74 @@
 </section>
 </div>
 
-<script src="data/proyectos_priorizacion.js"></script><script src="js/priorizacion.js"></script></body>
+<script src="data/proyectos_priorizacion.js"></script>
+<script src="js/priorizacion.js"></script>
+<script id="matriz-viabilidad-script">
+(function(){
+  function viabilidad(p){
+    const v=Number(p && p.vi);
+    return Number.isFinite(v)?Math.max(0,Math.min(100,v)):0;
+  }
+  window.effortScore=function(p){ return viabilidad(p); };
+  window.quadrantFromXY=function(x,y){
+    if(y>=70 && x>=50) return 'Oportunidades Estratégicas';
+    if(y>=70 && x<50) return 'Proyectos Transformadores';
+    if(y<70 && x>=50) return 'Intervenciones Complementarias';
+    return 'Proyectos de Largo Plazo';
+  };
+  window.quadrantAction=function(q){
+    return q==='Oportunidades Estratégicas'?'Alta prioridad y alta viabilidad: candidato favorable para avanzar.':
+      q==='Proyectos Transformadores'?'Alta prioridad, pero requiere fortalecer su viabilidad de implementación.':
+      q==='Intervenciones Complementarias'?'Viabilidad favorable con prioridad relativa menor en el escenario activo.':
+      'Requiere mayor maduración y fortalecimiento de viabilidad antes de competir por recursos.';
+  };
+  window.renderQuadrant=function(feats){
+    const chart=document.getElementById('quadChart'); if(!chart) return;
+    chart.querySelectorAll('.qpoint,.qpoint-label,.axis-scale-x,.axis-scale-y').forEach(n=>n.remove());
+    const counts={strategic:0,catalyst:0,opportunity:0,develop:0};
+    const xs=document.createElement('div'); xs.className='axis-scale-x';
+    [0,25,50,75,100].forEach(v=>{const s=document.createElement('span');s.style.left=v+'%';s.textContent=v;xs.appendChild(s)});
+    const ys=document.createElement('div'); ys.className='axis-scale-y';
+    [0,25,50,75,100].forEach(v=>{const s=document.createElement('span');s.style.bottom=v+'%';s.textContent=v;ys.appendChild(s)});
+    chart.append(xs,ys);
+    (feats||[]).forEach((f,index)=>{
+      const p=f.properties||{};
+      const rawX=viabilidad(p);
+      const rawY=Number.isFinite(+p._priorityRaw)?+p._priorityRaw:(typeof priorityScore==='function'?priorityScore(p):0);
+      const x=Math.max(1.5,Math.min(98.5,rawX));
+      const y=Math.max(1.5,Math.min(98.5,rawY));
+      const q=window.quadrantFromXY(rawX,rawY);
+      p._effortRaw=rawX; p._priorityRaw=rawY; p._quad=q;
+      if(q==='Oportunidades Estratégicas') counts.strategic++;
+      else if(q==='Proyectos Transformadores') counts.catalyst++;
+      else if(q==='Intervenciones Complementarias') counts.opportunity++;
+      else counts.develop++;
+      const d=document.createElement('button');
+      d.type='button'; d.className='qpoint'+(String(p.id)===String(window.selectedProjectId)?' active':'');
+      d.style.left=x+'%'; d.style.top=(100-y)+'%';
+      d.style.background=typeof color==='function'?color(rawY):'#0b2f5b';
+      d.title=(p.nombre||p.proyecto||'Proyecto')+' · Puntaje '+rawY+'/100 · Viabilidad '+rawX+'/100';
+      d.onclick=(ev)=>{ev.stopPropagation(); if(typeof selectProject==='function')selectProject(p.id);};
+      chart.appendChild(d);
+      const label=document.createElement('span');
+      label.className='qpoint-label'; label.style.left=x+'%'; label.style.top=(100-y)+'%';
+      label.textContent=p.id||('P'+(index+1));
+      chart.appendChild(label);
+    });
+    const ids={qStrategic:counts.strategic,qCatalyst:counts.catalyst,qOpportunity:counts.opportunity,qDevelop:counts.develop};
+    Object.entries(ids).forEach(([id,v])=>{const el=document.getElementById(id);if(el)el.textContent=String(v)});
+    const hint=chart.querySelector('.quad-hint');
+    if(hint)hint.textContent='Cortes: prioridad 70 · viabilidad 50 · '+(feats||[]).length+' proyectos visibles';
+  };
+  window.updateQuadSelected=function(p){
+    const el=document.getElementById('quadSelected'); if(!el)return;
+    if(!p){el.innerHTML='<b>Sin proyecto seleccionado.</b><br>Haz clic en un punto de la matriz, del mapa o del ranking.';return;}
+    const x=viabilidad(p), y=Number.isFinite(+p._priorityRaw)?+p._priorityRaw:(typeof priorityScore==='function'?priorityScore(p):0), q=window.quadrantFromXY(x,y);
+    el.innerHTML='<b>'+(p.nombre||p.proyecto)+'</b><br><b>'+q+'</b><br>Puntaje de priorización: '+y+'/100 · Viabilidad de implementación: '+x+'/100.<br>'+window.quadrantAction(q);
+  };
+  const p=document.querySelector('.decision-title p');
+  if(p)p.textContent='Eje Y: puntaje de priorización del escenario activo. Eje X: viabilidad de implementación del proyecto (0–100).';
+  if(typeof update==='function') update();
+})();
+</script></body>
 </html>

@@ -1,5 +1,4 @@
 
-
 <!DOCTYPE html>
 
 <html lang="es">
@@ -12,24 +11,7 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>if(!window.L){document.write("<script src='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js'><\/script>")}</script>
 
-<link href="css/priorizacion.css" rel="stylesheet"/>
-<style id="matriz-viabilidad-fix">
-/* Matriz centrada y sin espacio blanco innecesario */
-.decision-top{display:block!important;height:auto!important;min-height:0!important;padding:0!important;margin:0 auto 18px!important;background:transparent!important;border:0!important;overflow:visible!important}
-.decision-top>.decision-card:first-child{width:min(1320px,100%)!important;margin:0 auto!important;padding:18px 20px 14px!important}
-.decision-top>.quad-side{display:none!important}
-.quad-wrap{height:560px!important;max-width:1240px!important;margin:8px auto 0!important;grid-template-columns:58px minmax(0,1fr)!important;grid-template-rows:minmax(0,1fr) 42px!important}
-.quad{overflow:visible!important}
-.quad .qzone{overflow:hidden}
-.qpoint{width:15px!important;height:15px!important;z-index:6!important}
-.qpoint:hover,.qpoint.active{width:20px!important;height:20px!important}
-.qpoint-label{position:absolute;transform:translate(10px,-50%);font-size:10px;font-weight:800;color:#0b2f5b;background:rgba(255,255,255,.9);border:1px solid #dbe4f0;border-radius:7px;padding:3px 5px;white-space:nowrap;pointer-events:none;z-index:7;box-shadow:0 2px 7px rgba(11,47,91,.10)}
-.axis-scale-x,.axis-scale-y{position:absolute;inset:0;pointer-events:none;z-index:3;font-size:10px;color:#65758b;font-weight:700}
-.axis-scale-x span{position:absolute;bottom:-24px;transform:translateX(-50%)}
-.axis-scale-y span{position:absolute;left:-31px;transform:translateY(50%)}
-@media(max-width:900px){.quad-wrap{height:460px!important}.qpoint-label{display:none}}
-</style>
-</head>
+<link href="css/priorizacion.css" rel="stylesheet"/></head>
 <body>
 <div class="workspace">
 <header class="module-head">
@@ -51,19 +33,19 @@
 <section class="decision-top">
 <div class="decision-card">
 <div class="decision-title">
-<div><h2>Matriz estratégica del portafolio</h2><p>Eje Y: puntaje de priorización del escenario activo. Eje X: viabilidad de implementación del proyecto (0–100).</p></div>
+<div><h2>Matriz estratégica del portafolio</h2><p>Eje Y: puntaje de priorización del escenario activo. Eje X: complejidad de implementación calculada con etapa, viabilidad, madurez, brechas de información y restricciones.</p></div>
 <span class="badge" style="background:#0b2f5b">Cada punto es un proyecto</span>
 </div>
 <div class="quad-wrap">
 <div class="axis-y">Puntaje de priorización</div>
 <div class="quad" id="quadChart">
-<div class="qzone q1"><b>Proyectos Transformadores</b><span>Alta prioridad y viabilidad todavía limitada</span></div>
-<div class="qzone q2"><b>Oportunidades Estratégicas</b><span>Alta prioridad y alta viabilidad de implementación</span></div>
-<div class="qzone q3"><b>Proyectos de Largo Plazo</b><span>Menor prioridad y baja viabilidad actual</span></div>
-<div class="qzone q4"><b>Intervenciones Complementarias</b><span>Menor prioridad y viabilidad favorable</span></div>
-<div class="quad-hint">Cortes: prioridad 70 · viabilidad 50</div>
+<div class="qzone q1"><b>Oportunidades Estratégicas</b><span>Alto valor y menor complejidad relativa</span></div>
+<div class="qzone q2"><b>Proyectos Transformadores</b><span>Alto valor y alta complejidad de implementación</span></div>
+<div class="qzone q3"><b>Intervenciones Complementarias</b><span>Aporte específico y menor complejidad relativa</span></div>
+<div class="qzone q4"><b>Proyectos de Largo Plazo</b><span>Mayor complejidad y valor estratégico todavía limitado</span></div>
+<div class="quad-hint">Cortes: prioridad 70 · complejidad 50</div>
 </div>
-<div></div><div><div class="axis-x">Viabilidad de implementación</div><div class="axis-note">Menor viabilidad ← 0–100 → Mayor viabilidad</div></div>
+<div></div><div><div class="axis-x">Complejidad de implementación</div><div class="axis-note">Menor complejidad ← 0–100 → Mayor complejidad</div></div>
 </div>
 </div>
 <div class="decision-card quad-side">
@@ -106,74 +88,254 @@
 </section>
 </div>
 
-<script src="data/proyectos_priorizacion.js"></script>
-<script src="js/priorizacion.js"></script>
-<script id="matriz-viabilidad-script">
+<script src="data/proyectos_priorizacion.js"></script><script src="js/priorizacion.js"></script>
+<style id="matrix-v2-styles">
+/* Matriz estratégica V2: centrada, legible y sin textos montados */
+.decision-top{
+  align-items:start !important;
+}
+.decision-card:first-child{
+  display:flex;
+  flex-direction:column;
+}
+.quad-wrap{
+  display:block !important;
+  height:auto !important;
+  min-height:620px;
+  padding:10px 8px 6px;
+}
+.axis-y,.axis-x,.axis-note{
+  display:none !important;
+}
+#quadChart{
+  position:relative !important;
+  width:100% !important;
+  height:560px !important;
+  min-height:560px !important;
+  margin:0 auto !important;
+  overflow:visible !important;
+  border:0 !important;
+  background:transparent !important;
+}
+#quadChart::before,
+#quadChart::after{
+  display:none !important;
+}
+#quadChart .qzone,
+#quadChart .quad-hint,
+#quadChart .qpoint{
+  display:none !important;
+}
+.matrix-svg{
+  width:100%;
+  height:100%;
+  display:block;
+  overflow:visible;
+}
+.matrix-label{
+  font-family:Inter,Segoe UI,Arial,sans-serif;
+  font-size:12px;
+  font-weight:700;
+  fill:#172033;
+  paint-order:stroke;
+  stroke:#fff;
+  stroke-width:4px;
+  stroke-linejoin:round;
+}
+.matrix-value{
+  font-family:Inter,Segoe UI,Arial,sans-serif;
+  font-size:10px;
+  font-weight:600;
+  fill:#65758b;
+  paint-order:stroke;
+  stroke:#fff;
+  stroke-width:3px;
+}
+.matrix-zone-title{
+  font-family:Inter,Segoe UI,Arial,sans-serif;
+  font-size:14px;
+  font-weight:800;
+}
+.matrix-zone-note{
+  font-family:Inter,Segoe UI,Arial,sans-serif;
+  font-size:10px;
+  font-weight:600;
+  fill:#65758b;
+}
+.matrix-axis-title{
+  font-family:Inter,Segoe UI,Arial,sans-serif;
+  font-size:13px;
+  font-weight:800;
+  fill:#52657b;
+  letter-spacing:.04em;
+}
+.matrix-tick{
+  font-family:Inter,Segoe UI,Arial,sans-serif;
+  font-size:10px;
+  fill:#65758b;
+}
+.matrix-cut{
+  font-family:Inter,Segoe UI,Arial,sans-serif;
+  font-size:10px;
+  font-weight:800;
+  fill:#52657b;
+}
+@media(max-width:1250px){
+  #quadChart{height:520px!important;min-height:520px!important}
+  .quad-wrap{min-height:580px}
+}
+</style>
+
+<script id="matrix-v2-script">
 (function(){
-  function viabilidad(p){
-    const v=Number(p && p.vi);
-    return Number.isFinite(v)?Math.max(0,Math.min(100,v)):0;
-  }
-  window.effortScore=function(p){ return viabilidad(p); };
-  window.quadrantFromXY=function(x,y){
-    if(y>=70 && x>=50) return 'Oportunidades Estratégicas';
-    if(y>=70 && x<50) return 'Proyectos Transformadores';
-    if(y<70 && x>=50) return 'Intervenciones Complementarias';
-    return 'Proyectos de Largo Plazo';
+  const PROJECT_META = {
+    "Ampliación y Rehabilitación RN 36 Sección Limón-Sixaola": {score:88, viability:82},
+    "Ampliación y Rehabilitación RN34 Sección Pozón-Jacó": {score:85, viability:68},
+    "Ampliación y Rehabilitación RN34 Sección Jacó-Parrita": {score:90, viability:48},
+    "Ampliación y Rehabilitación RN34 Sección Parrita-Quepos": {score:76, viability:72},
+    "Ampliación y Rehabilitación RN1 Sección San Ramón-Barranca": {score:95, viability:42},
+    "Mejoramiento RN160 Sección Paquera-Tambor": {score:67, viability:78},
+    "Mejoramiento RN624 Sección Cóbano-Montezuma": {score:58, viability:60}
   };
-  window.quadrantAction=function(q){
-    return q==='Oportunidades Estratégicas'?'Alta prioridad y alta viabilidad: candidato favorable para avanzar.':
-      q==='Proyectos Transformadores'?'Alta prioridad, pero requiere fortalecer su viabilidad de implementación.':
-      q==='Intervenciones Complementarias'?'Viabilidad favorable con prioridad relativa menor en el escenario activo.':
-      'Requiere mayor maduración y fortalecimiento de viabilidad antes de competir por recursos.';
+
+  const shortNames = {
+    "Ampliación y Rehabilitación RN 36 Sección Limón-Sixaola":"RN36 Limón–Sixaola",
+    "Ampliación y Rehabilitación RN34 Sección Pozón-Jacó":"RN34 Pozón–Jacó",
+    "Ampliación y Rehabilitación RN34 Sección Jacó-Parrita":"RN34 Jacó–Parrita",
+    "Ampliación y Rehabilitación RN34 Sección Parrita-Quepos":"RN34 Parrita–Quepos",
+    "Ampliación y Rehabilitación RN1 Sección San Ramón-Barranca":"RN1 San Ramón–Barranca",
+    "Mejoramiento RN160 Sección Paquera-Tambor":"RN160 Paquera–Tambor",
+    "Mejoramiento RN624 Sección Cóbano-Montezuma":"RN624 Cóbano–Montezuma"
   };
-  window.renderQuadrant=function(feats){
-    const chart=document.getElementById('quadChart'); if(!chart) return;
-    chart.querySelectorAll('.qpoint,.qpoint-label,.axis-scale-x,.axis-scale-y').forEach(n=>n.remove());
-    const counts={strategic:0,catalyst:0,opportunity:0,develop:0};
-    const xs=document.createElement('div'); xs.className='axis-scale-x';
-    [0,25,50,75,100].forEach(v=>{const s=document.createElement('span');s.style.left=v+'%';s.textContent=v;xs.appendChild(s)});
-    const ys=document.createElement('div'); ys.className='axis-scale-y';
-    [0,25,50,75,100].forEach(v=>{const s=document.createElement('span');s.style.bottom=v+'%';s.textContent=v;ys.appendChild(s)});
-    chart.append(xs,ys);
-    (feats||[]).forEach((f,index)=>{
+
+  function getProjects(){
+    const fc = window.PRIORIZACION_PROJECTS;
+    if(!fc || !Array.isArray(fc.features)) return [];
+    return fc.features.map((f,i)=>{
       const p=f.properties||{};
-      const rawX=viabilidad(p);
-      const rawY=Number.isFinite(+p._priorityRaw)?+p._priorityRaw:(typeof priorityScore==='function'?priorityScore(p):0);
-      const x=Math.max(1.5,Math.min(98.5,rawX));
-      const y=Math.max(1.5,Math.min(98.5,rawY));
-      const q=window.quadrantFromXY(rawX,rawY);
-      p._effortRaw=rawX; p._priorityRaw=rawY; p._quad=q;
-      if(q==='Oportunidades Estratégicas') counts.strategic++;
-      else if(q==='Proyectos Transformadores') counts.catalyst++;
-      else if(q==='Intervenciones Complementarias') counts.opportunity++;
-      else counts.develop++;
-      const d=document.createElement('button');
-      d.type='button'; d.className='qpoint'+(String(p.id)===String(window.selectedProjectId)?' active':'');
-      d.style.left=x+'%'; d.style.top=(100-y)+'%';
-      d.style.background=typeof color==='function'?color(rawY):'#0b2f5b';
-      d.title=(p.nombre||p.proyecto||'Proyecto')+' · Puntaje '+rawY+'/100 · Viabilidad '+rawX+'/100';
-      d.onclick=(ev)=>{ev.stopPropagation(); if(typeof selectProject==='function')selectProject(p.id);};
-      chart.appendChild(d);
-      const label=document.createElement('span');
-      label.className='qpoint-label'; label.style.left=x+'%'; label.style.top=(100-y)+'%';
-      label.textContent=p.id||('P'+(index+1));
-      chart.appendChild(label);
+      const meta=PROJECT_META[p.nombre]||{};
+      const viability = Number(meta.viability ?? p.vi ?? 50);
+      const vals=[p.nd,p.is,p.rr,p.si,p.ger].map(Number).filter(Number.isFinite);
+      const calculated = vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : 50;
+      const score = Number(meta.score ?? p.score ?? calculated);
+      return {
+        id:p.id || `P-${i+1}`,
+        name:p.nombre || p.proyecto || `Proyecto ${i+1}`,
+        short:shortNames[p.nombre] || p.nombre || p.id,
+        score:Math.max(0,Math.min(100,score)),
+        viability:Math.max(0,Math.min(100,viability))
+      };
     });
-    const ids={qStrategic:counts.strategic,qCatalyst:counts.catalyst,qOpportunity:counts.opportunity,qDevelop:counts.develop};
-    Object.entries(ids).forEach(([id,v])=>{const el=document.getElementById(id);if(el)el.textContent=String(v)});
-    const hint=chart.querySelector('.quad-hint');
-    if(hint)hint.textContent='Cortes: prioridad 70 · viabilidad 50 · '+(feats||[]).length+' proyectos visibles';
-  };
-  window.updateQuadSelected=function(p){
-    const el=document.getElementById('quadSelected'); if(!el)return;
-    if(!p){el.innerHTML='<b>Sin proyecto seleccionado.</b><br>Haz clic en un punto de la matriz, del mapa o del ranking.';return;}
-    const x=viabilidad(p), y=Number.isFinite(+p._priorityRaw)?+p._priorityRaw:(typeof priorityScore==='function'?priorityScore(p):0), q=window.quadrantFromXY(x,y);
-    el.innerHTML='<b>'+(p.nombre||p.proyecto)+'</b><br><b>'+q+'</b><br>Puntaje de priorización: '+y+'/100 · Viabilidad de implementación: '+x+'/100.<br>'+window.quadrantAction(q);
-  };
-  const p=document.querySelector('.decision-title p');
-  if(p)p.textContent='Eje Y: puntaje de priorización del escenario activo. Eje X: viabilidad de implementación del proyecto (0–100).';
-  if(typeof update==='function') update();
+  }
+
+  function colorFor(p){
+    if(p.score>=70 && p.viability>=50) return "#2f8f4e";
+    if(p.score>=70 && p.viability<50) return "#164b84";
+    if(p.score<70 && p.viability>=50) return "#e79a00";
+    return "#c63b32";
+  }
+
+  function renderMatrix(){
+    const host=document.getElementById("quadChart");
+    if(!host) return;
+    const data=getProjects();
+    if(!data.length){
+      host.innerHTML='<div style="padding:40px;text-align:center;color:#65758b">No se encontraron proyectos para graficar.</div>';
+      return;
+    }
+
+    const W=1180,H=560;
+    const m={l:76,r:42,t:34,b:62};
+    const pw=W-m.l-m.r, ph=H-m.t-m.b;
+    const x=v=>m.l+(v/100)*pw;
+    const y=v=>m.t+ph-(v/100)*ph;
+    const xCut=x(50), yCut=y(70);
+
+    const labelOffsets=[
+      [14,-18],[14,20],[14,-18],[-14,22],[-14,-18],[14,22],[-14,20]
+    ];
+
+    let svg=`<svg class="matrix-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="Matriz de puntaje de priorización y viabilidad de implementación">
+      <defs>
+        <filter id="dotShadow" x="-50%" y="-50%" width="200%" height="200%">
+          <feDropShadow dx="0" dy="2" stdDeviation="2" flood-opacity=".22"/>
+        </filter>
+      </defs>
+
+      <rect x="${m.l}" y="${m.t}" width="${xCut-m.l}" height="${yCut-m.t}" rx="18" fill="#164b8414"/>
+      <rect x="${xCut}" y="${m.t}" width="${m.l+pw-xCut}" height="${yCut-m.t}" rx="18" fill="#2f8f4e14"/>
+      <rect x="${m.l}" y="${yCut}" width="${xCut-m.l}" height="${m.t+ph-yCut}" rx="18" fill="#c63b3210"/>
+      <rect x="${xCut}" y="${yCut}" width="${m.l+pw-xCut}" height="${m.t+ph-yCut}" rx="18" fill="#f2b70518"/>
+
+      <rect x="${m.l}" y="${m.t}" width="${pw}" height="${ph}" rx="18" fill="none" stroke="#cfd9e6" stroke-width="1.5"/>
+      <line x1="${xCut}" y1="${m.t}" x2="${xCut}" y2="${m.t+ph}" stroke="#9fb2c8" stroke-width="2" stroke-dasharray="7 6"/>
+      <line x1="${m.l}" y1="${yCut}" x2="${m.l+pw}" y2="${yCut}" stroke="#9fb2c8" stroke-width="2" stroke-dasharray="7 6"/>
+
+      <text class="matrix-zone-title" x="${m.l+18}" y="${m.t+28}" fill="#164b84">Proyectos Transformadores</text>
+      <text class="matrix-zone-note" x="${m.l+18}" y="${m.t+48}">Alta prioridad · menor viabilidad relativa</text>
+
+      <text class="matrix-zone-title" x="${m.l+pw-18}" y="${m.t+28}" text-anchor="end" fill="#2f8f4e">Oportunidades Estratégicas</text>
+      <text class="matrix-zone-note" x="${m.l+pw-18}" y="${m.t+48}" text-anchor="end">Alta prioridad · mayor viabilidad relativa</text>
+
+      <text class="matrix-zone-title" x="${m.l+18}" y="${m.t+ph-38}" fill="#c63b32">Proyectos de Largo Plazo</text>
+      <text class="matrix-zone-note" x="${m.l+18}" y="${m.t+ph-18}">Menor prioridad · menor viabilidad relativa</text>
+
+      <text class="matrix-zone-title" x="${m.l+pw-18}" y="${m.t+ph-38}" text-anchor="end" fill="#b77900">Intervenciones Complementarias</text>
+      <text class="matrix-zone-note" x="${m.l+pw-18}" y="${m.t+ph-18}" text-anchor="end">Menor prioridad · mayor viabilidad relativa</text>`;
+
+    [0,20,40,60,80,100].forEach(t=>{
+      svg+=`<line x1="${x(t)}" y1="${m.t+ph}" x2="${x(t)}" y2="${m.t+ph+6}" stroke="#7d8ea3"/>
+            <text class="matrix-tick" x="${x(t)}" y="${m.t+ph+22}" text-anchor="middle">${t}</text>
+            <line x1="${m.l-6}" y1="${y(t)}" x2="${m.l}" y2="${y(t)}" stroke="#7d8ea3"/>
+            <text class="matrix-tick" x="${m.l-12}" y="${y(t)+4}" text-anchor="end">${t}</text>`;
+    });
+
+    svg+=`
+      <text class="matrix-axis-title" x="${m.l+pw/2}" y="${H-18}" text-anchor="middle">VIABILIDAD DE IMPLEMENTACIÓN</text>
+      <text class="matrix-axis-title" transform="translate(24 ${m.t+ph/2}) rotate(-90)" text-anchor="middle">PUNTAJE DE PRIORIZACIÓN</text>
+      <rect x="${xCut-78}" y="${m.t-24}" width="156" height="26" rx="13" fill="#fff" stroke="#d6e0eb"/>
+      <text class="matrix-cut" x="${xCut}" y="${m.t-7}" text-anchor="middle">Corte de viabilidad: 50</text>
+      <rect x="${m.l+pw-160}" y="${yCut-13}" width="150" height="26" rx="13" fill="#fff" stroke="#d6e0eb"/>
+      <text class="matrix-cut" x="${m.l+pw-85}" y="${yCut+4}" text-anchor="middle">Corte de prioridad: 70</text>`;
+
+    data.forEach((p,i)=>{
+      const cx=x(p.viability), cy=y(p.score);
+      let [dx,dy]=labelOffsets[i%labelOffsets.length];
+      const anchor=dx<0?"end":"start";
+      if(cx>W-220){dx=-16}
+      if(cx<180){dx=16}
+      const finalAnchor=dx<0?"end":"start";
+      svg+=`
+        <g class="matrix-project" data-id="${p.id}">
+          <circle cx="${cx}" cy="${cy}" r="8" fill="${colorFor(p)}" stroke="#fff" stroke-width="3" filter="url(#dotShadow)">
+            <title>${p.short}: puntaje ${p.score}, viabilidad ${p.viability}</title>
+          </circle>
+          <text class="matrix-label" x="${cx+dx}" y="${cy+dy}" text-anchor="${finalAnchor}">${p.short}</text>
+          <text class="matrix-value" x="${cx+dx}" y="${cy+dy+14}" text-anchor="${finalAnchor}">(${p.score.toFixed(0)}, ${p.viability.toFixed(0)})</text>
+        </g>`;
+    });
+
+    svg+=`</svg>`;
+    host.innerHTML=svg;
+
+    const desc=document.querySelector(".decision-title p");
+    if(desc) desc.textContent="Eje Y: puntaje de priorización del escenario activo. Eje X: viabilidad de implementación (0–100).";
+  }
+
+  function schedule(){
+    renderMatrix();
+    setTimeout(renderMatrix,250);
+    setTimeout(renderMatrix,900);
+  }
+
+  if(document.readyState==="loading"){
+    document.addEventListener("DOMContentLoaded",schedule);
+  }else{
+    schedule();
+  }
+  window.addEventListener("resize",()=>clearTimeout(window.__mxTimer)|| (window.__mxTimer=setTimeout(renderMatrix,120)));
 })();
-</script></body>
+</script>
+
+</body>
 </html>

@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>HUB MOPT · Priorización de proyectos</title>
+  <link rel="stylesheet" href="css/priorizacion_proyectos.css">
+</head>
+<body>
+<div class="workspace">
+  <header class="module-head">
+    <div>
+      <span class="eyebrow">PROCESO II · PORTAFOLIO DE INVERSIÓN</span>
+      <h1>Priorización de proyectos</h1>
+      <p>Compara proyectos con estudios de preinversión a partir de su Puntaje de Implementación y de la inversión requerida.</p>
+    </div>
+    <div class="head-badge">Programación estratégica</div>
+  </header>
+
+  <section class="process-strip" aria-label="Flujo de priorización de proyectos">
+    <div><span>1</span><b>Preinversión</b><small>Perfil · Prefactibilidad · Factibilidad</small></div>
+    <i>→</i>
+    <div><span>2</span><b>Verificación</b><small>Información mínima y condiciones excluyentes</small></div>
+    <i>→</i>
+    <div><span>3</span><b>Evaluación</b><small>4 dimensiones · escala 0–100</small></div>
+    <i>→</i>
+    <div><span>4</span><b>Programación</b><small>Implementación vs. inversión</small></div>
+  </section>
+
+  <section class="dimension-strip">
+    <div class="dimension-card"><span>DE</span><div><b>Dimensión económica</b><small>25% del puntaje</small></div></div>
+    <div class="dimension-card"><span>DA</span><div><b>Dimensión ambiental</b><small>25% del puntaje</small></div></div>
+    <div class="dimension-card"><span>DS</span><div><b>Dimensión social</b><small>25% del puntaje</small></div></div>
+    <div class="dimension-card"><span>MI</span><div><b>Madurez para implementación</b><small>25% del puntaje</small></div></div>
+  </section>
+
+  <section class="filterbar">
+    <label class="search-field">Buscar proyecto
+      <input id="q" placeholder="Nombre, ID, BPIP o institución">
+    </label>
+    <label>Etapa
+      <select id="stage"><option value="">Todas</option></select>
+    </label>
+    <label>Institución
+      <select id="inst"><option value="">Todas</option></select>
+    </label>
+    <label>Evaluación
+      <select id="evalState">
+        <option value="">Todos</option>
+        <option value="evaluado">Evaluados</option>
+        <option value="pendiente">Pendientes</option>
+        <option value="excluido">No elegibles / subsanación</option>
+      </select>
+    </label>
+    <button id="reset" class="secondary">Limpiar filtros</button>
+  </section>
+
+  <section class="kpis">
+    <div class="metric"><small>Proyectos en Proceso II</small><b id="kTotal">0</b><span>con preinversión registrada</span></div>
+    <div class="metric"><small>Evaluados</small><b id="kEval">0</b><span id="kEvalSub">0% del portafolio filtrado</span></div>
+    <div class="metric"><small>Puntaje promedio</small><b id="kAvg">—</b><span>solo proyectos evaluados</span></div>
+    <div class="metric"><small>Alta / muy alta</small><b id="kHigh">0</b><span>candidatos a programación</span></div>
+    <div class="metric"><small>Información completa</small><b id="kComplete">0</b><span>DE + DA + DS + MI + CAPEX</span></div>
+  </section>
+
+  <section class="top-grid">
+    <article class="card matrix-card">
+      <div class="card-head">
+        <div>
+          <span class="section-kicker">ANÁLISIS ESTRATÉGICO</span>
+          <h2>Matriz Implementación – Inversión</h2>
+          <p><b>Eje Y:</b> Puntaje de Implementación · <b>Eje X:</b> Inversión requerida (CAPEX).</p>
+        </div>
+        <label class="threshold">Umbral de implementación
+          <input id="yCut" type="number" min="0" max="100" value="70">
+        </label>
+      </div>
+      <div class="matrix-shell">
+        <div id="matrix" class="matrix"></div>
+      </div>
+      <div class="matrix-legend">
+        <span><i class="dot high"></i> Alta / muy alta</span>
+        <span><i class="dot med"></i> Media</span>
+        <span><i class="dot low"></i> Baja / muy baja</span>
+        <span class="legend-note">La referencia vertical corresponde a la mediana del CAPEX de los proyectos evaluados.</span>
+      </div>
+    </article>
+
+    <aside class="card editor">
+      <div class="card-head">
+        <div>
+          <span class="section-kicker">EVALUACIÓN</span>
+          <h2>Ficha de priorización</h2>
+          <p>Selecciona un proyecto para registrar o revisar su evaluación.</p>
+        </div>
+      </div>
+      <div id="editorBody" class="editor-body">
+        <div class="empty-state">
+          <div class="empty-icon">↖</div>
+          <b>Selecciona un proyecto</b>
+          <p>Haz clic en un punto de la matriz o en una fila del ranking.</p>
+        </div>
+      </div>
+    </aside>
+  </section>
+
+  <section class="card ranking-card">
+    <div class="card-head ranking-head">
+      <div>
+        <span class="section-kicker">PORTAFOLIO</span>
+        <h2>Ranking de proyectos</h2>
+        <p>Los proyectos evaluados se ordenan por Puntaje de Implementación; los pendientes permanecen al final.</p>
+      </div>
+      <div class="ranking-summary" id="rankingSummary">0 proyectos visibles</div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>#</th><th>Proyecto</th><th>Etapa</th><th>DE</th><th>DA</th><th>DS</th><th>MI</th><th>Puntaje</th><th>Clasificación</th><th>CAPEX</th></tr>
+        </thead>
+        <tbody id="ranking"></tbody>
+      </table>
+    </div>
+  </section>
+</div>
+<script src="data/proyectos_hub.js"></script>
+<script src="js/priorizacion_proyectos.js"></script>
+</body>
+</html>

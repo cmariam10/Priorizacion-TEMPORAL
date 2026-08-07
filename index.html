@@ -1,0 +1,204 @@
+
+<!DOCTYPE html>
+
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<title>HUB de Proyectos MOPT | Fases, flujo y matriz</title>
+
+
+<link href="css/hub.css" rel="stylesheet"/></head>
+<body>
+<div class="app">
+<section class="hero">
+<small>Propuesta funcional</small>
+<h1>HUB de Proyectos MOPT</h1>
+<p>Prototipo con ingreso por rol, flujo de gobernanza, matriz de avance por fases, buscador de proyectos, historial individual, bandeja de trabajo y notificaciones.</p>
+</section>
+<div class="login-bar">
+<div>
+<b>Modo visitante</b>
+<span id="sessionLabel"> · Información pública del portafolio</span>
+</div>
+<div class="login-controls">
+<select id="roleSelect" onchange="previewRole()">
+<option value="">Seleccionar rol para iniciar sesión</option>
+<option value="tecnico">Técnico / Profesional</option>
+<option value="jefatura">Jefatura Técnica / Coordinador</option>
+<option value="planeamiento">Planeamiento Institucional</option>
+<option value="direccion">Dirección / Gerencia</option>
+<option value="coordinador">Coordinador HUB Institucional</option>
+<option value="secretaria">Secretaría Técnica HUB</option>
+<option value="areas">Áreas Técnicas MOPT</option>
+<option value="comite">Comité HUB Central</option>
+<option value="ejecutor">Institución Ejecutora</option>
+</select>
+<button onclick="loginRole()">Iniciar sesión</button>
+<button class="secondary hidden" id="logoutBtn" onclick="logoutRole()">Salir</button>
+</div>
+</div>
+<div class="role-card horizontal hidden" id="roleCard"></div>
+<select class="hidden" id="projectSelect"></select>
+<div class="layout no-sidebar">
+<main>
+<nav class="tabs">
+<button class="tab active public-tab" onclick="showView('inicio',this)">Inicio</button>
+<button class="tab public-tab" onclick="showView('flujo',this)">Flujo y fases</button>
+<button class="tab public-tab" onclick="showView('matriz',this)">Matriz de proyectos</button>
+<button class="tab public-tab" onclick="showView('priorizacion',this)">Priorización de iniciativas</button>
+<button class="tab public-tab" onclick="showView('priorizacionProyectos',this)">Priorización de proyectos</button>
+<button class="tab protected-tab hidden" onclick="showView('bandeja',this)">Bandeja</button>
+<button class="tab protected-tab hidden" onclick="showView('notificaciones',this)">Notificaciones</button>
+<button class="tab protected-tab hidden" onclick="showView('documentos',this)">Documentos</button>
+<button class="tab protected-tab hidden" onclick="showView('registrar',this)">Registrar</button>
+</nav>
+<section class="view panel" id="inicio">
+<h2>Vista general del portafolio</h2>
+<p class="muted">Vista pública del HUB: permite consultar el portafolio, el flujo de gobernanza, la matriz de avance por fases y el historial general. Los filtros actualizan simultáneamente los indicadores y el listado.</p>
+<div class="filter-panel">
+<div><label>Buscar</label><input id="globalSearch" oninput="applyGlobalFilters()" placeholder="ID, BPIP, nombre, dependencia, categoría..."/></div>
+<div><label>Fase</label><select id="globalPhase" onchange="applyGlobalFilters()"><option value="">Todas</option><option value="1">Fase 1</option><option value="2">Fase 2</option><option value="3">Fase 3</option><option value="4">Fase 4</option></select></div>
+<div><label>Dependencia</label><select id="globalInst" onchange="applyGlobalFilters()"></select></div>
+<div><label>Estado</label><select id="globalState" onchange="applyGlobalFilters()"></select></div>
+<div><label>Categoría</label><select id="globalCat" onchange="applyGlobalFilters()"></select></div>
+<div><label>Subcategoría</label><select id="globalSubcat" onchange="applyGlobalFilters()"></select></div>
+<div><label>Vinculación</label><select id="globalPriority" onchange="applyGlobalFilters()"></select></div>
+<div><label>Paso actual</label><select id="globalStep" onchange="applyGlobalFilters()"><option value="">Todos</option></select></div>
+<div class="filter-actions"><button onclick="resetGlobalFilters()">Limpiar filtros</button></div>
+</div>
+<div class="kpis">
+<div class="kpi"><small>Proyectos filtrados</small><strong id="kTotal"></strong></div>
+<div class="kpi"><small>En gestión institucional</small><strong id="kF1"></strong></div>
+<div class="kpi"><small>En evaluación central</small><strong id="kF2"></strong></div>
+<div class="kpi"><small>Rechazados / descartados</small><strong id="kRech"></strong></div>
+</div>
+<div class="section-head">
+<div>
+<h3>Listado general filtrado</h3>
+<p class="muted">Seleccione “Ver historial” para abrir la trazabilidad sin salir del listado.</p>
+</div>
+<div class="counter" id="homeCounter"></div>
+</div>
+<div id="homeListBox"></div>
+</section>
+<section class="view panel hidden" id="flujo">
+<div class="flow-title-row">
+<div>
+<h2>Flujo de gobernanza por fases</h2>
+<p class="muted">Lectura funcional del proceso desde el registro de la idea hasta ejecución y cierre. Cada tarjeta muestra el responsable y la acción principal del paso.</p>
+</div>
+<div class="flow-legend">
+<span><i class="lg green"></i>Aprueba / avanza</span>
+<span><i class="lg orange"></i>Devuelve para ajustes</span>
+<span><i class="lg red"></i>Rechaza / archiva</span>
+<span><i class="lg purple"></i>Pasa a ejecución</span>
+</div>
+</div>
+<div class="phase-flow-cards" id="phaseFlowCards"></div>
+</section>
+<section class="view panel hidden" id="matriz">
+<h2>Matriz general de avance por fases</h2>
+<p class="muted">Cada fila corresponde a un proyecto. Los puntos muestran qué pasos ya cumplió, en cuál se encuentra, si fue devuelto o si fue rechazado.</p>
+<div class="matrix-tools">
+<div><label>Buscar proyecto</label><input id="matrixSearch" oninput="renderMatrix()" placeholder="ID, BPIP, nombre, dependencia, estado, categoría..."/></div>
+<div><label>Fase</label><select id="phaseFilter" onchange="renderMatrix()"><option value="">Todas</option><option value="1">Fase 1</option><option value="2">Fase 2</option><option value="3">Fase 3</option><option value="4">Fase 4</option></select></div>
+<div><label>Dependencia</label><select id="instFilter" onchange="renderMatrix()"></select></div>
+<div><label>Estado</label><select id="stateFilter" onchange="renderMatrix()"></select></div>
+<div class="counter" id="matrixCounter"></div>
+</div>
+<div class="matrix-wrap"><div class="matrix" id="matrixBox"></div></div>
+</section>
+<section class="view panel hidden" id="fichas" aria-modal="true" role="dialog" aria-labelledby="fichaModalTitle">
+<div class="flow-title-row">
+<div class="ficha-module-title">
+<div class="ficha-module-icon">🗂️</div>
+<div>
+<span class="ficha-module-kicker">Ficha del proyecto</span>
+<h2 id="fichaModalTitle">Detalle del proyecto</h2>
+</div>
+</div>
+<div class="ficha-modal-actions"><button class="secondary" onclick="closeFichasModal()">Cerrar</button></div>
+</div>
+<div class="ficha-modal-content">
+<div id="fichaBox"></div>
+</div>
+</section>
+<section class="view panel hidden priorizacion-shell" id="priorizacion">
+<iframe class="prio-map-frame" id="priorizacionFrame" scrolling="no" src="priorizacion.html" title="Priorización geográfica HUB MOPT"></iframe>
+</section>
+<section class="view panel hidden priorizacion-shell" id="priorizacionProyectos">
+<iframe class="prio-map-frame" id="priorizacionProyectosFrame" scrolling="no" src="priorizacion_proyectos.html" title="Priorización de proyectos HUB MOPT"></iframe>
+</section>
+<section class="view panel hidden" id="historial">
+<h2>Historial por proyecto</h2>
+<div id="projectDetail"></div>
+</section>
+<section class="view panel hidden" id="listado"><div id="listBox"></div></section>
+<section class="view panel hidden" id="bandeja">
+<h2>Bandeja de trabajo por rol</h2>
+<p class="muted">Muestra los proyectos que requieren revisión, validación o acción del rol seleccionado.</p>
+<div id="inboxBox"></div>
+</section>
+<section class="view panel hidden" id="notificaciones">
+<h2>Centro de notificaciones</h2>
+<div id="notifBox"></div>
+</section>
+<section class="view panel hidden" id="documentos">
+<h2>Documentos y soportes del HUB</h2>
+<p class="muted">Módulo interno para consultar, cargar y editar documentos asociados a los proyectos, según el rol de usuario.</p>
+<div class="doc-toolbar">
+<div><label>Buscar documento</label><input id="docSearch" oninput="renderDocuments()" placeholder="Proyecto, documento, responsable o estado..."/></div>
+<div><label>Tipo</label><select id="docTypeFilter" onchange="renderDocuments()"><option value="">Todos</option><option>Ficha de iniciativa</option><option>Diagnóstico / justificación</option><option>Estimación de costos</option><option>Aval institucional</option><option>Concepto técnico</option><option>Matriz de criterios</option><option>Plan de ejecución</option></select></div>
+<div><label>Estado</label><select id="docStateFilter" onchange="renderDocuments()"><option value="">Todos</option><option>Borrador</option><option>En revisión</option><option>Aprobado</option><option>Devuelto para ajustes</option></select></div>
+</div>
+<div class="role-register-note" id="docPermissionNote"></div>
+<div id="documentsBox"></div>
+</section>
+<section class="view panel hidden" id="registrar">
+<h2>Registrar nueva iniciativa</h2>
+<p class="muted">Formulario base para capturar una iniciativa y ubicarla en el paso 1 del flujo.</p><div class="role-register-note">Módulo visible solo para roles autorizados: Técnico / Profesional, Coordinador HUB Institucional y Secretaría Técnica HUB.</div>
+<div class="detail">
+<div>
+<label>Nombre del proyecto</label><textarea id="newName" placeholder="Nombre de la iniciativa" rows="3"></textarea>
+<label>Dependencia</label><input id="newInst" placeholder="Dependencia responsable"/>
+<label>Categoría</label><input id="newCat" placeholder="Obra pública, no obra pública..."/>
+</div>
+<div>
+<label>BPIP</label><input id="newBpip" placeholder="Por definir"/>
+<label>Prioridad / vinculación</label><select id="newPriority"><option>Bajo</option><option>Medio</option><option>Alto</option></select>
+<br/><br/><button onclick="addProject()">Guardar iniciativa</button>
+</div>
+</div>
+</section>
+</main>
+</div>
+<div class="modal-backdrop" id="manageModal" onclick="closeManageModal(event)">
+<div class="history-modal" onclick="event.stopPropagation()">
+<div class="modal-head">
+<div>
+<h2 id="manageTitle">Gestionar proyecto</h2>
+<p class="muted" id="manageMeta"></p>
+</div>
+<button class="secondary" onclick="closeManageModal()">Cerrar</button>
+</div>
+<div id="manageBody"></div>
+</div>
+</div>
+<div class="modal-backdrop" id="historyModal" onclick="closeHistoryModal(event)">
+<div class="history-modal" onclick="event.stopPropagation()">
+<div class="modal-head">
+<div>
+<h2 id="modalProjectTitle">Historial del proyecto</h2>
+<p class="muted" id="modalProjectMeta"></p>
+</div>
+<button class="secondary" onclick="closeHistoryModal()">Cerrar</button>
+</div>
+<div id="modalProjectBody"></div>
+</div>
+</div>
+</div>
+
+
+<script src="data/proyectos_hub.js"></script><script src="data/geometria_proyectos.js"></script><script src="js/hub.js"></script></body>
+</html>

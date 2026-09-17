@@ -18,8 +18,8 @@ const steps=[
 {n:16,title:"Supervisión / interventoría",phase:4,role:"Supervisor",desc:"Verifica calidad, cumplimiento e informes."},
 {n:17,title:"Cierre del proyecto",phase:4,role:"Comité / ejecutor",desc:"Cierra, liquida y registra lecciones aprendidas."}
 ];
-const BASE_PROJECTS = JSON.parse(JSON.stringify(window.HUB_PROJECTS||[]));
-let projects = JSON.parse(JSON.stringify(BASE_PROJECTS));
+const BASE_PROJECTS = [];
+let projects = []; // Solo datos reales provenientes del Excel maestro.
 let activeId=projects[0]?.id||"";
 let currentRole="visitor";
 const canRegisterRoles=["tecnico","coordinador","secretaria"];
@@ -50,7 +50,7 @@ const HUB_USERS={
 let currentUser=null;
 function userStorageKey(){return currentUser?`hub_demo_state_v2_${currentUser.username}`:null;}
 function resetWorkspace(){
- projects=JSON.parse(JSON.stringify(BASE_PROJECTS));
+ projects=[];
  documents=JSON.parse(JSON.stringify(BASE_DOCUMENTS));
  auditLog=[]; activeId=projects[0]?.id||"";
 }
@@ -64,7 +64,7 @@ function loadHubState(){
  try{
   const raw=localStorage.getItem(key); if(!raw)return;
   const st=JSON.parse(raw);
-  if(Array.isArray(st.projects)&&st.projects.length)projects=st.projects;
+  /* Excel es la única fuente maestra: no restaurar proyectos desde localStorage. */
   documents=[]; // Los documentos se cargan únicamente desde OneDrive.
   if(Array.isArray(st.auditLog))auditLog=st.auditLog;
   activeId=projects[0]?.id||"";
@@ -505,12 +505,13 @@ function getGlobalFilteredProjects(){
  return projects.filter(p=>matches(p,q)&&(!ph||phaseOf(p.step)==+ph)&&(!inst||p.inst==inst)&&(!st||p.state==st)&&(!cat||p.categoria==cat)&&(!sub||p.subcategoria==sub)&&(!pri||p.priority==pri)&&(!step||p.step==+step));
 }
 function renderKpis(){
- const list=getGlobalFilteredProjects();
- kTotal.textContent=list.length;
- kF1.textContent=list.filter(p=>phaseOf(p.step)==1).length;
- kF2.textContent=list.filter(p=>phaseOf(p.step)==2).length;
- kRech.textContent=list.filter(p=>p.rejected).length;
- if(homeCounter)homeCounter.innerHTML=`${list.length} de ${projects.length}<br><span style="font-size:12px;color:var(--muted)">proyectos visibles</span>`;
+  const list=getGlobalFilteredProjects();
+  const loaded=projects.length>0;
+  kTotal.textContent=loaded?list.length:"—";
+  kF1.textContent=loaded?list.filter(p=>phaseOf(p.step)==1).length:"—";
+  kF2.textContent=loaded?list.filter(p=>phaseOf(p.step)==2).length:"—";
+  kRech.textContent=loaded?list.filter(p=>p.rejected).length:"—";
+  if(homeCounter)homeCounter.innerHTML=loaded?`${list.length} de ${projects.length}<br><span style="font-size:12px;color:var(--muted)">proyectos visibles</span>`:`—<br><span style="font-size:12px;color:var(--muted)">base maestra no cargada</span>`;
 }
 function filteredProjects(){
  let q=matrixSearch.value, ph=phaseFilter.value, inst=instFilter.value, st=stateFilter.value;
@@ -634,6 +635,12 @@ window.viewProjectDocuments=viewProjectDocuments;
 
 function renderList(){
   const list=getGlobalFilteredProjects();
+  if(!projects.length){
+    const empty='<div class="note"><b>Base maestra no cargada.</b><br>El HUB no muestra datos de demostración. Los proyectos e indicadores aparecerán al cargar la base real de Excel.</div>';
+    if(listBox)listBox.innerHTML=empty;
+    if(homeListBox)homeListBox.innerHTML=empty;
+    return;
+  }
   const table=`<div class="project-list-wrap"><table class="project-list-table">
     <thead><tr>
       <th class="pl-id">ID / BPIP</th>

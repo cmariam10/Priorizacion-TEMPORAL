@@ -106,7 +106,11 @@ function ensureTabBadge(tab,prefix,count){
  badge.textContent=String(count);badge.style.display=count>0?"inline-block":"none";
 }
 
-async function refreshBadgesAfterSharedSync(){ refreshWorkBadges(); }
+async function refreshBadgesAfterSharedSync(){
+ if(!currentUser||currentRole==="visitor"){refreshWorkBadges();return;}
+ try{await loadAllSharedWorkflow();}catch(e){console.warn("No se pudo refrescar el flujo para contadores",e);}
+ refreshWorkBadges();
+}
 window.refreshBadgesAfterSharedSync=refreshBadgesAfterSharedSync;
 
 function refreshWorkBadges(){
@@ -917,15 +921,6 @@ function buildExcelValues(id,existing={}){
   const el=document.querySelector(`[data-excel-header="${CSS.escape(h)}"]`);return el?el.value.trim():(existing[h]??"");
  });
 }
-function buildProjectApiPayload(){
- const payload={};
- for(const h of excelHeaders){
-  if(["ID HUB","Fecha actualización","Estado HUB","Referencia de fila"].some(x=>hnorm(x)===hnorm(h)))continue;
-  const el=document.querySelector(`[data-excel-header="${CSS.escape(h)}"]`);
-  payload[h]=el?el.value.trim():"";
- }
- return payload;
-}
 async function appendExcelProject(values){
  const b=await resolveExcelWorkbook(),t=await resolveExcelTable();
  return graphFetch(`/drives/${b.driveId}/items/${b.itemId}/workbook/tables/${encodeURIComponent(t.name)}/rows/add`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({index:null,values:[values]})});
@@ -1393,6 +1388,7 @@ function refreshRoleAccess(){
 }
 async function changeTestProfile(){
  if(!currentUser)return;
+ await loadAllSharedWorkflow();
  const roleEl=document.getElementById("roleSelect");
  const sessionEl=document.getElementById("sessionLabel");
  if(!roleEl)return;
@@ -2364,48 +2360,39 @@ async function renderFicha(id){
 }
 
 async function addProject(){
- if(currentRole==='visitor'||!canRegisterRoles.includes(currentRole)){alert('Su rol no tiene permiso para registrar iniciativas.');return;}
+ if(!canRegister())return alert("El perfil activo no tiene permiso para registrar iniciativas.");
  try{
-  await resolveExcelTable();
-  const inst=formValue("Institución"); const name=formValue("Nombre del proyecto");
-  if(!inst){alert("Seleccione la Institución.");return;} if(!name){alert("Ingrese el Nombre del proyecto.");return;}
-  const btn=document.getElementById("saveExcelProjectBtn"),editId=btn?.dataset?.editId||"";
-  if(editId){
-   const rows=await getExcelRows(),r=rows.find(x=>String(cell(x,"ID HUB")).trim()===editId);if(!r)throw new Error("No se encontró "+editId+" en el Excel.");
-   const existing=Object.fromEntries(excelHeaders.map((h,i)=>[h,r.values?.[0]?.[i]??""]));
-   await patchExcelRow(r.index,buildExcelValues(editId,existing));
-   if(projectGeometryDirty){
-    if(!pendingProjectGeometry||!validProjectGeometry(pendingProjectGeometry)){
-     throw new Error("La nueva ubicación no es válida. No se modificó la geometría guardada anteriormente.");
-    }
-    pendingProjectGeometry.source="user";
-    await saveProjectGeometry(editId,pendingProjectGeometry);
-   }
-   window.__editingGeometry=null;pendingProjectGeometry=null;originalProjectGeometry=null;projectGeometryDirty=false;
-   if(btn){btn.textContent="Guardar iniciativa";delete btn.dataset.editId;}
-   await loadProjectsFromExcel();auditLog.unshift({project:editId,action:"Editó iniciativa",role:actorLabel(),date:new Date().toLocaleString(),comment:"Actualización guardada en Excel maestro."});
-   alert(`${editId} actualizado correctamente en Excel.`);return;
+  const instEl=[...document.querySelectorAll("[data-excel-header]")].find(e=>hnorm(e.dataset.excelHeader)===hnorm("Institución"));
+  const nameEl=[...document.querySelectorAll("[data-excel-header]")].find(e=>hnorm(e.dataset.excelHeader)===hnorm("Nombre del proyecto"));
+  const inst=(instEl?.value||"").trim(), name=(nameEl?.value||"").trim();
+  if(!inst||!name)return alert("Institución y Nombre del proyecto son obligatorios.");
+  if(!pendingProjectGeometry||!validProjectGeometry(pendingProjectGeometry))return alert("Debe indicar la ubicación del proyecto en el mapa antes de guardar.");
+  if(pendingProjectGeometry.type==="segment"&&pendingProjectGeometry.routeMode==="road"&&!pendingProjectGeometry.geometry)return alert("Debe calcular el trazado por rutas existentes antes de guardar.");
+
+  const payload={};
+  for(const h of excelHeaders){
+   if(["ID HUB","Fecha actualización","Estado HUB","Referencia de fila"].some(x=>hnorm(x)===hnorm(h)))continue;
+   const el=document.querySelector(`[data-excel-header="${CSS.escape(h)}"]`);
+   payload[h]=el?el.value.trim():"";
   }
-  if(!pendingProjectGeometry||!pendingProjectGeometry.referencePoints?.length){alert("Defina la ubicación del proyecto en el mapa.");return;}
-  if(pendingProjectGeometry.type==="segment"&&pendingProjectGeometry.referencePoints.length<2){alert("Para un tramo marque al menos dos puntos.");return;}
-  if(pendingProjectGeometry.type==="segment"){
-   const selectedMode=document.getElementById("segmentRouteMode")?.value;
-   if(!selectedMode){alert("Seleccione si el tramo debe calcar rutas existentes o quedar en línea recta.");return;}
-   if(selectedMode==="road"&&pendingProjectGeometry.routeMode!=="road")await routeProjectSegment();
-   if(selectedMode==="linear"){pendingProjectGeometry.coordinates=pendingProjectGeometry.referencePoints.map(p=>[p.lon,p.lat]);pendingProjectGeometry.routeMode="linear";}
-  }
-  const registration=await hubApiFetch("/projects",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(buildProjectApiPayload())});
+
+  const registration=await hubApiFetch("/projects",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
   const id=String(registration?.idHub||"").trim();
   if(!id)throw new Error("El Worker registró la iniciativa, pero no devolvió el ID HUB.");
+
   await hubApiFetch(`/projects/${encodeURIComponent(id)}/geometry`,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({...pendingProjectGeometry,source:"user"})});
+
   pendingProjectGeometry=null;originalProjectGeometry=null;projectGeometryDirty=false;
   await loadProjectsFromExcel();
-  auditLog.unshift({project:id,action:"Registró iniciativa",role:actorLabel(),date:new Date().toLocaleString(),comment:"Registro creado mediante HUB API en Excel maestro."});
+  auditLog.unshift({project:id,action:"Registró iniciativa",role:actorLabel(),date:new Date().toLocaleString(),comment:"Registro creado mediante HUB API."});
   renderRegistrationForm();
   const folderName=registration?.carpetaOneDrive?.name||`${id} - ${name}`;
-  const folderWarning=registration?.advertenciaCarpeta?`\nAdvertencia de carpeta: ${registration.advertenciaCarpeta}`:"";
-  alert(`Iniciativa ${id} registrada correctamente en Excel, ubicación guardada y carpeta gestionada en OneDrive:\n${folderName}${folderWarning}`);
- }catch(e){console.error(e);alert("No fue posible guardar la iniciativa: "+e.message);}
+  const warning=registration?.advertenciaCarpeta?`\nAdvertencia de carpeta: ${registration.advertenciaCarpeta}`:"";
+  alert(`Iniciativa ${id} registrada correctamente.\nExcel actualizado, ubicación guardada y carpeta gestionada en OneDrive:\n${folderName}${warning}`);
+ }catch(e){
+  console.error(e);
+  alert("No fue posible guardar la iniciativa mediante el HUB API: "+e.message);
+ }
 }
 
 resetWorkspace(); populateSelects(); applyRole(); renderFlow(); renderKpis(); renderMatrix(); renderDetail(); renderList(); renderInbox(); renderNotifications(); renderDocuments(); applyGlobalFilters();

@@ -32,10 +32,10 @@
 <option value="direccion">Dirección / Gerencia</option>
 <option value="coordinador">Coordinador HUB Institucional</option>
 <option value="secretaria">Secretaría Técnica HUB</option>
-<option value="administrador">Administrador HUB / Gobernanza</option>
 <option value="areas">Áreas Técnicas MOPT</option>
 <option value="comite">Comité HUB Central</option>
 <option value="ejecutor">Institución Ejecutora</option>
+<option value="admin">Administrador HUB / Gobernanza</option>
 </select>
 <button onclick="loginRole()">Iniciar sesión</button>
 <button class="secondary hidden" id="logoutBtn" onclick="logoutRole()">Salir</button>
@@ -194,5 +194,7 @@
 </div>
 
 
+<script src="https://alcdn.msauth.net/browser/2.35.0/js/msal-browser.min.js"></script>
+<script>if(typeof msal==="undefined"){document.write('<script src="https://alcdn.msftauth.net/browser/2.35.0/js/msal-browser.min.js"><\/script>');}</script>
 <script src="data/proyectos_hub.js"></script><script src="data/geometria_proyectos.js"></script><script src="js/hub.js"></script></body>
 </html>

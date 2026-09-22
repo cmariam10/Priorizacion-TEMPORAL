@@ -227,7 +227,7 @@ function completenessScore(p){
   const valid=fields.filter(v=>v!==null&&v!==undefined&&String(v).trim()!==''&&String(v).toLowerCase()!=='nan'&&String(v).toLowerCase()!=='por definir').length;
   return +(valid/fields.length*100).toFixed(1);
 }
-function stageReadiness(p){const e=String(p.etapa||'').toLowerCase();if(e.includes('ejec'))return 95;if(e.includes('licit'))return 88;if(e.includes('factib'))return 82;if(e.includes('prefact'))return 70;if(e.includes('perfil'))return 55;if(e.includes('idea'))return 25;return 40}function complexityComponents(p){return{viabilidad:+(+p.vi||0).toFixed(1)}}function effortScore(p){return +(100-(+p.vi||0)).toFixed(1)}function valueScore(p){const keys=['nd','is','rr','si'];let tw=0,sum=0;keys.forEach(k=>{const w=+(weights?.[k]??1);tw+=w;sum+=(+p[k]||0)*w});return +(tw?sum/tw:0).toFixed(1)}function priorityScore(p){return valueScore(p)}function quadrantFromXY(x,y){if(y>=70&&x<50)return'Victoria Temprana';if(y>=70&&x>=50)return'Mina de Oro';if(y<70&&x<50)return'Disparo Lunar';return'Cuestionable'}function quadrantName(p){return p._quad||quadrantFromXY(p._effortRaw??effortScore(p),p._priorityRaw??priorityScore(p))}function quadrantAction(q){return q==='Victoria Temprana'?'Alto valor y bajo esfuerzo: priorizar estudios.':q==='Mina de Oro'?'Alto valor y alto esfuerzo: programar estudios estratégicos.':q==='Disparo Lunar'?'Bajo valor y bajo esfuerzo: revisar el momento oportuno para avanzar.':'Bajo valor y alto esfuerzo: reformular o mantener en banco de información.'}
+function stageReadiness(p){const e=String(p.etapa||'').toLowerCase();if(e.includes('ejec'))return 95;if(e.includes('licit'))return 88;if(e.includes('factib'))return 82;if(e.includes('prefact'))return 70;if(e.includes('perfil'))return 55;if(e.includes('idea'))return 25;return 40}function complexityComponents(p){return{etapa:+(100-stageReadiness(p)).toFixed(1),tecnica:+(100-(+p.vi||0)).toFixed(1),institucional:+(100-(+p.ger||0)).toFixed(1),informacion:+(100-completeness(p)).toFixed(1),restricciones:+(100-(+p.si||0)).toFixed(1)}}function effortScore(p){const c=complexityComponents(p);return +(c.etapa*.25+c.tecnica*.30+c.institucional*.20+c.informacion*.15+c.restricciones*.10).toFixed(1)}function priorityScore(p){return score(p)}function quadrantFromXY(x,y){if(y>=70&&x<50)return'Oportunidades Estratégicas';if(y>=70&&x>=50)return'Proyectos Transformadores';if(y<70&&x<50)return'Intervenciones Complementarias';return'Proyectos de Largo Plazo'}function quadrantName(p){return p._quad||quadrantFromXY(p._effortRaw??effortScore(p),p._priorityRaw??priorityScore(p))}function quadrantAction(q){return q==='Oportunidades Estratégicas'?'Alto valor estratégico y complejidad comparativamente baja.':q==='Proyectos Transformadores'?'Alto valor con exigencias técnicas, financieras o institucionales relevantes.':q==='Intervenciones Complementarias'?'Aporte focalizado y complejidad relativamente manejable.':'Requiere mayor maduración o revisión antes de competir por recursos.'}
 function renderQuadrant(feats){
  const chart=document.getElementById('quadChart'); if(!chart) return;
  chart.querySelectorAll('.qpoint').forEach(n=>n.remove());
@@ -242,9 +242,9 @@ function renderQuadrant(feats){
    const y=Math.max(2,Math.min(98,rawY+jy));
    const q=quadrantFromXY(rawX,rawY);
    p._effortRaw=rawX; p._priorityRaw=rawY; p._quad=q;
-   if(q==='Victoria Temprana') counts.strategic++;
-   else if(q==='Mina de Oro') counts.catalyst++;
-   else if(q==='Disparo Lunar') counts.opportunity++;
+   if(q==='Oportunidades Estratégicas') counts.strategic++;
+   else if(q==='Proyectos Transformadores') counts.catalyst++;
+   else if(q==='Intervenciones Complementarias') counts.opportunity++;
    else counts.develop++;
    const d=document.createElement('button');
    d.type='button';
@@ -253,20 +253,20 @@ function renderQuadrant(feats){
    d.style.top=(100-y)+'%';
    d.style.background=color(rawY);
    d.setAttribute('aria-label',(p.nombre||p.proyecto||'Proyecto')+' '+q);
-   d.title=(p.nombre||p.proyecto)+' · '+q+' · Valor '+rawY+'/100 · Esfuerzo '+rawX+'/100';
+   d.title=(p.nombre||p.proyecto)+' · '+q+' · Puntaje '+rawY+'/100 · Complejidad '+rawX+'/100';
    d.onclick=(ev)=>{ev.stopPropagation();selectProject(p.id);};
    chart.appendChild(d);
  });
  const ids={qStrategic:counts.strategic,qCatalyst:counts.catalyst,qOpportunity:counts.opportunity,qDevelop:counts.develop};
  Object.entries(ids).forEach(([id,v])=>{const el=document.getElementById(id);if(el)el.textContent=String(v);});
  const hint=chart.querySelector('.quad-hint');
- if(hint) hint.textContent=`Cortes: valor 70 · esfuerzo 50 · ${feats.length} iniciativas visibles`;
+ if(hint) hint.textContent=`Cortes: prioridad 70 · complejidad 50 · ${feats.length} proyectos visibles`;
 }
 function updateQuadSelected(p){
  let el=document.getElementById('quadSelected'); if(!el) return;
  if(!p){el.innerHTML='<b>Sin proyecto seleccionado.</b><br>Haz clic en un punto de la matriz, del mapa o del ranking para ver su lectura estratégica.'; return;}
  let q=quadrantName(p), x=p._effortRaw??effortScore(p), y=p._priorityRaw??priorityScore(p), c=complexityComponents(p);
- el.innerHTML=`<b>${p.nombre||p.proyecto}</b><br><b>${q}</b><br>Índice de Valor: ${y}/100 · Índice de Esfuerzo: ${x}/100.<br><span style="color:#65758b">El Valor combina Necesidad y Desempeño, Impacto Socioeconómico, Riesgo y Resiliencia y Sostenibilidad Integral. El Esfuerzo se deriva de Viabilidad de Implementación.</span><br>${quadrantAction(q)}`;
+ el.innerHTML=`<b>${p.nombre||p.proyecto}</b><br><b>${q}</b><br>Puntaje de priorización: ${y}/100 · Complejidad de implementación: ${x}/100.<br><span style="color:#65758b">Preparación: etapa ${c.etapa}, complejidad técnica ${c.tecnica}, esfuerzo institucional ${c.institucional}, brechas de información ${c.informacion} y restricciones ${c.restricciones}.</span><br>${quadrantAction(q)}`;
 }
 
 

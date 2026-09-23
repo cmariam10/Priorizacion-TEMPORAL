@@ -1,4 +1,4 @@
-const API_BASE="https://hub-proyectos-mopt-api.cmariam10.workers.dev";
+const API_BASE = "https://hub-proyectos-mopt-api.cmariam10.workers.dev";
 const API_SCOPE="api://3a5ead05-e9e6-477b-9a63-24ef1f9fefd5/access_as_user";
 const MSAL_CONFIG={auth:{clientId:"3a5ead05-e9e6-477b-9a63-24ef1f9fefd5",authority:"https://login.microsoftonline.com/common",redirectUri:"https://cmariam10.github.io/Priorizacion-TEMPORAL/"},cache:{cacheLocation:"sessionStorage"}};
 let msalApp=null,config=null,projects=[],ranking=[],activeId=null;

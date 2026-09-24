@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>HUB MOPT · Priorización</title>
   <link rel="stylesheet" href="css/priorizacion_v2.css" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
 </head>
 <body>
   <main class="shell">
@@ -37,6 +36,57 @@
       <label>Matriz<select id="matrixFilter"><option value="">Todas</option></select></label>
       <label>Institución<select id="institutionFilter"><option value="">Todas</option></select></label>
       <label>Clasificación<select id="classFilter"><option value="">Todas</option><option>Muy Alta</option><option>Alta</option><option>Media</option><option>Baja</option><option>Muy baja</option></select></label>
+    </section>
+
+
+    <section class="panel priority-guide" aria-labelledby="priorityGuideTitle">
+      <div class="panel-head priority-guide-head">
+        <div>
+          <p class="eyebrow teal">LECTURA DE PORTAFOLIO</p>
+          <h2 id="priorityGuideTitle">Esquema de priorización</h2>
+          <p>Cada iniciativa se representa como un punto según su valor o puntaje y el esfuerzo requerido para avanzar. El cuadrante orienta la decisión, pero no sustituye la revisión técnica y gerencial.</p>
+        </div>
+      </div>
+
+      <div class="quadrant-grid" aria-label="Interpretación de cuadrantes">
+        <article class="quadrant-card q-early">
+          <span class="quadrant-kicker">Alto valor · Bajo esfuerzo</span>
+          <h3>Victoria Temprana</h3>
+          <p class="quadrant-alias">Avance prioritario</p>
+          <p><b>Acción:</b> Priorizar estudios.</p>
+        </article>
+        <article class="quadrant-card q-gold">
+          <span class="quadrant-kicker">Alto valor · Alto esfuerzo</span>
+          <h3>Mina de Oro</h3>
+          <p class="quadrant-alias">Programar</p>
+          <p><b>Acción:</b> Programar estudios estratégicos.</p>
+        </article>
+        <article class="quadrant-card q-moon">
+          <span class="quadrant-kicker">Bajo valor · Bajo esfuerzo</span>
+          <h3>Disparo Lunar</h3>
+          <p class="quadrant-alias">Oportunidad secundaria</p>
+          <p><b>Acción:</b> Revisar cuándo es más oportuno avanzar, evitando perder foco.</p>
+        </article>
+        <article class="quadrant-card q-question">
+          <span class="quadrant-kicker">Bajo valor · Alto esfuerzo</span>
+          <h3>Cuestionable</h3>
+          <p class="quadrant-alias">Replantear</p>
+          <p><b>Acción:</b> Reformular o mantener en banco de información.</p>
+        </article>
+      </div>
+
+      <div class="thematic-ranking">
+        <div class="section-head">
+          <h3>Rankings temáticos</h3>
+          <span>Usan los mismos indicadores ya calculados, cambiando la ponderación según el objetivo de política pública.</span>
+        </div>
+        <div class="thematic-grid">
+          <article><b>Equidad territorial</b><span>Mayor peso al Índice de Desarrollo Social y población beneficiaria.</span></article>
+          <article><b>Competitividad</b><span>Mayor peso a conectividad logística, corredores estratégicos e impacto económico.</span></article>
+          <article><b>Adaptación climática</b><span>Mayor peso a resiliencia, reducción de vulnerabilidad y adaptación al cambio climático.</span></article>
+          <article><b>Reactivación económica</b><span>Mayor peso a rápida implementación y generación de empleo.</span></article>
+        </div>
+      </div>
     </section>
 
     <section class="panel">
@@ -116,7 +166,6 @@
 
   <!-- La librería MSAL se intenta cargar aquí y el JS tiene además un fallback automático. -->
   <script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
   <script src="js/priorizacion_v2.js"></script>
 </body>
 </html>

@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>HUB MOPT · Priorización</title>
+  <link rel="stylesheet" href="css/priorizacion_v2.css" />
+</head>
+<body>
+  <main class="shell">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">HUB DE PROYECTOS · MOPT</p>
+        <h1>Priorización de iniciativas</h1>
+        <p class="lead">Motor multicriterio parametrizado, evidencia geoespacial y ranking trazable por proyecto.</p>
+      </div>
+      <div class="hero-actions">
+        <button id="btnRefresh" class="secondary" type="button">Actualizar</button>
+        <button id="btnBatch" type="button">Recalcular lote</button>
+      </div>
+    </header>
+
+    <section class="notice" id="methodologyNotice">
+      <b>Metodología:</b> cargando configuración…
+    </section>
+
+    <section class="kpis">
+      <article><span>Proyectos HUB</span><b id="kProjects">—</b></article>
+      <article><span>Evaluados</span><b id="kEvaluated">—</b></article>
+      <article><span>Con puntaje técnico</span><b id="kTechnical">—</b></article>
+      <article><span>Con puntaje final</span><b id="kFinal">—</b></article>
+    </section>
+
+    <section class="panel filters">
+      <label>Buscar<input id="q" type="search" placeholder="ID, proyecto, institución…"></label>
+      <label>Matriz<select id="matrixFilter"><option value="">Todas</option></select></label>
+      <label>Institución<select id="institutionFilter"><option value="">Todas</option></select></label>
+      <label>Clasificación<select id="classFilter"><option value="">Todas</option><option>Muy Alta</option><option>Alta</option><option>Media</option><option>Baja</option><option>Muy baja</option></select></label>
+    </section>
+
+
+
+    <section class="panel priority-guide" aria-labelledby="priorityGuideTitle">
+      <div class="panel-head priority-guide-head">
+        <div>
+          <p class="eyebrow teal">LECTURA DE PORTAFOLIO</p>
+          <h2 id="priorityGuideTitle">Esquema de priorización</h2>
+          <p>Cada iniciativa se representa como un punto según su valor o puntaje y el esfuerzo requerido para avanzar. El cuadrante orienta la decisión, pero no sustituye la revisión técnica y gerencial.</p>
+        </div>
+      </div>
+
+      <div class="priority-matrix-wrap" role="img" aria-label="Matriz de cuatro cuadrantes: valor o puntaje frente a esfuerzo requerido">
+        <div class="priority-axis-y">VALOR / PUNTAJE</div>
+        <div class="priority-matrix">
+          <article class="priority-quadrant matrix-early">
+            <div class="quadrant-copy top-left">
+              <h3>Victoria Temprana</h3>
+              <p class="quadrant-relation">Alto valor · Bajo esfuerzo</p>
+              <p class="quadrant-alias">Avance prioritario</p>
+              <p class="quadrant-action"><b>Acción:</b> Priorizar estudios.</p>
+            </div>
+          </article>
+          <article class="priority-quadrant matrix-gold">
+            <div class="quadrant-copy top-right">
+              <h3>Mina de Oro</h3>
+              <p class="quadrant-relation">Alto valor · Alto esfuerzo</p>
+              <p class="quadrant-alias">Programar</p>
+              <p class="quadrant-action"><b>Acción:</b> Programar estudios estratégicos.</p>
+            </div>
+          </article>
+          <article class="priority-quadrant matrix-moon">
+            <div class="quadrant-copy bottom-left">
+              <h3>Disparo Lunar</h3>
+              <p class="quadrant-relation">Bajo valor · Bajo esfuerzo</p>
+              <p class="quadrant-alias">Oportunidad secundaria</p>
+              <p class="quadrant-action"><b>Acción:</b> Revisar cuándo es más oportuno avanzar, evitando perder foco.</p>
+            </div>
+          </article>
+          <article class="priority-quadrant matrix-question">
+            <div class="quadrant-copy bottom-right">
+              <h3>Cuestionable</h3>
+              <p class="quadrant-relation">Bajo valor · Alto esfuerzo</p>
+              <p class="quadrant-alias">Replantear</p>
+              <p class="quadrant-action"><b>Acción:</b> Reformular o mantener en banco de información.</p>
+            </div>
+          </article>
+          <div class="matrix-divider vertical" aria-hidden="true"></div>
+          <div class="matrix-divider horizontal" aria-hidden="true"></div>
+        </div>
+        <div class="priority-axis-x">ESFUERZO REQUERIDO</div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <div>
+          <h2>Ranking</h2>
+          <p id="rankingSubtitle">Se ordena por Puntaje Final; cuando aún no exista regla de agregación aprobada, se muestra el Puntaje Técnico como referencia provisional.</p>
+        </div>
+        <button id="btnCsv" class="secondary" type="button">Exportar CSV</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>#</th><th>ID HUB</th><th>Proyecto</th><th>Matriz</th><th>Técnico</th><th>Gerencial</th><th>Final</th><th>Clasificación</th><th>Faltantes</th><th></th></tr>
+          </thead>
+          <tbody id="rankingBody"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="projectDialog">
+    <div class="dialog-card">
+      <div class="dialog-head">
+        <div>
+          <p class="eyebrow">DETALLE DE PRIORIZACIÓN</p>
+          <h2 id="dialogTitle">Proyecto</h2>
+          <p id="dialogMeta"></p>
+        </div>
+        <button type="button" id="btnCloseDialog" class="icon-btn" aria-label="Cerrar">×</button>
+      </div>
+
+      <div id="dialogStatus" class="notice compact"></div>
+
+      <div class="score-strip">
+        <div><span>Técnico</span><b id="dTechnical">—</b></div>
+        <div><span>Gerencial</span><b id="dManagerial">—</b></div>
+        <div><span>Final</span><b id="dFinal">—</b></div>
+      </div>
+
+      <section class="dialog-section">
+        <div class="section-head">
+          <h3>Configuración</h3>
+          <span>La matriz puede corregirse manualmente si la asignación automática no aplica.</span>
+        </div>
+        <div class="grid-3">
+          <label>Matriz<select id="matrixOverride"></select></label>
+          <label>Peso técnico<input id="technicalWeight" type="number" min="0" max="100" step="1" placeholder="Sin definir"></label>
+          <label>Peso gerencial<input id="managerialWeight" type="number" min="0" max="100" step="1" placeholder="Sin definir"></label>
+        </div>
+      </section>
+
+      <section class="dialog-section">
+        <div class="section-head">
+          <h3>Indicadores</h3>
+          <span>El HUB separa resultados automáticos de la información que debe registrar la persona usuaria.</span>
+        </div>
+        <div id="indicatorEditor" class="indicator-grid"></div>
+      </section>
+
+      <section class="dialog-section">
+        <div class="section-head">
+          <h3>Evidencia geoespacial</h3>
+          <span>Resultado de los cruces geoespaciales usados por el cálculo.</span>
+        </div>
+        <div id="spatialEvidence" class="evidence"></div>
+      </section>
+
+      <div class="dialog-actions">
+        <button type="button" id="btnSave" class="secondary">Guardar datos</button>
+        <button type="button" id="btnCalculate">Calcular / recalcular</button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="rankingFichaDialog" class="rf-dialog" aria-label="Ficha y puntajes del proyecto">
+    <div class="rf-shell"><div class="rf-head"><strong>Ficha y puntajes de priorización</strong><button type="button" class="secondary" onclick="document.getElementById('rankingFichaDialog').close()">Cerrar</button></div><div id="rankingFichaContent" class="rf-content"></div></div>
+  </dialog>
+  <div id="toast" class="toast" hidden></div>
+
+  <style>
+    body.rf-modal-open{overflow:hidden!important}
+    .rf-dialog{width:min(1120px,95vw);height:min(91dvh,920px);max-height:91dvh;box-sizing:border-box;overflow:hidden;border:0;border-radius:20px;padding:0;box-shadow:0 26px 90px #061a3566;color:#17324b}
+    .rf-dialog::backdrop{background:rgba(8,23,43,.63);backdrop-filter:blur(3px)}
+    .rf-shell{display:flex;flex-direction:column;height:100%;min-height:0;overflow:hidden}
+    .rf-head{flex:0 0 auto;position:relative;z-index:5;background:#fff;padding:15px 22px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #dbe7ef}
+    .rf-content{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;scrollbar-color:#08798d #e7edf3;scrollbar-width:thin;padding:22px}
+    .rf-content::-webkit-scrollbar{width:10px}.rf-content::-webkit-scrollbar-track{background:#e7edf3}.rf-content::-webkit-scrollbar-thumb{background:#08798d;border-radius:9px}
+    .rf-section{margin:0 0 26px}.rf-section>h3{margin:18px 0 12px}.rf-location{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(210px,1fr);gap:14px;margin:12px 0 18px}.rf-map{height:320px;border-radius:14px;border:1px solid #dce6ef;overflow:hidden;background:#edf4f6;display:flex;align-items:center;justify-content:center;color:#577084}.rf-map.leaflet-container{display:block;isolation:isolate;z-index:0}.rf-map-note{font-size:12px;color:#65758a;margin-top:7px}.rf-map-aside{border:1px solid #dce6ef;border-radius:14px;padding:18px;background:#f8fbfd;line-height:1.5}.rf-map-aside p{color:#65758a;font-size:14px}.rf-map-aside span{font-size:12px;font-weight:700;color:#08798d}
+    .rf-hero{background:linear-gradient(110deg,#0b477f,#0e8190);color:#fff;border-radius:15px;padding:22px;margin-bottom:20px}.rf-hero h2{color:#fff;margin:5px 0}.rf-hero p{margin:4px 0}.rf-eyebrow{font-size:12px;font-weight:800;letter-spacing:.08em}
+    .rf-scores{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.rf-scores>div{display:flex;flex-direction:column;gap:6px;background:#f2f7fa;border:1px solid #d8e5ee;border-radius:13px;padding:16px}.rf-scores b{font-size:28px;color:#075a8b}.rf-scores small,.rf-fields small{color:#65758a}.rf-scores span{font-size:13px;font-weight:600}
+    .rf-explanation{color:#5c6d81;line-height:1.55}.rf-indicators{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.rf-indicator{display:flex;justify-content:space-between;gap:12px;border:1px solid #dae4ec;border-radius:12px;padding:13px}.rf-indicator small{display:block;color:#60738a;margin-top:6px}.rf-indicator strong{white-space:nowrap;color:#087b88}.rf-fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.rf-fields>div{display:grid;gap:5px;border:1px solid #dce6ef;border-radius:12px;padding:12px;overflow-wrap:anywhere}
+    .rf-selected{font-weight:700;color:#065f73}.rf-unknown{color:#a26118;font-style:italic}
+    .row-ficha{background:#12858e!important;color:#fff!important;border-color:#12858e!important}
+    @media(max-width:700px){.rf-scores,.rf-indicators,.rf-fields,.rf-location{grid-template-columns:1fr}.rf-content{padding:12px}.rf-map{height:260px}}
+  </style>
+  <!-- La librería MSAL se intenta cargar aquí y el JS tiene además un fallback automático. -->
+  <script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
+  <script src="js/priorizacion_v2.js"></script>
+</body>
+</html>
